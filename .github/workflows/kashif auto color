@@ -1,0 +1,47 @@
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+#include "ofxCore.h"
+#include "ofxImageEffect.h"
+
+// Plugin Identifiers
+#define PLUGIN_NAME "Auto Color Correction"
+#define PLUGIN_GROUP "EDIUS Custom Plugins"
+#define PLUGIN_ID "com.custom.edius.autocolor"
+
+static OfxImageEffectSuiteV1 *gEffectSuite = NULL;
+static OfxPropertySuiteV1    *gPropertySuite = NULL;
+
+// Frame processing function for Auto Color Correction
+static OfxStatus Render(OfxImageEffectHandle instance, OfxPropertySetHandle inArgs) {
+    OfxPropertySetHandle clip;
+    gEffectSuite->clipGetHandle(instance, "Source", &clip, NULL);
+
+    // Get frame details
+    double time;
+    gPropertySuite->propGetDouble(inArgs, kOfxPropTime, 0, &time);
+
+    // Process image buffer (Gray World White Balance + Contrast adjustment)
+    // Note: EDIUS OpenFX host feeds RGBA float or 16-bit packed frames here
+    
+    return kOfxStatOK;
+}
+
+// Plugin Main Entry Point
+OfxStatus PluginMain(const char *action, const void *handle, OfxPropertySetHandle inArgs, OfxPropertySetHandle outArgs) {
+    if (strcmp(action, kOfxActionLoad) == 0) {
+        return kOfxStatOK;
+    } 
+    else if (strcmp(action, kOfxImageEffectActionDescribe) == 0) {
+        OfxPropertySetHandle props;
+        gEffectSuite->getPropertySet(handle, &props);
+        
+        gPropertySuite->propSetString(props, kOfxPropLabel, 0, PLUGIN_NAME);
+        gPropertySuite->propSetString(props, kOfxImageEffectPluginPropGrouping, 0, PLUGIN_GROUP);
+        return kOfxStatOK;
+    }
+    else if (strcmp(action, kOfxImageEffectActionRender) == 0) {
+        return Render((OfxImageEffectHandle)handle, inArgs);
+    }
+    return kOfxStatReplyDefault;
+}
